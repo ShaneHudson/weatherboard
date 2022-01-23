@@ -3,7 +3,6 @@ from io import BytesIO
 
 from flask import Flask, send_file, request
 
-from composer_2 import ImageComposer2
 from composer_7 import ImageComposer7
 
 app = Flask(__name__)
@@ -12,10 +11,10 @@ app = Flask(__name__)
 @app.route("/")
 def index():
     config = {
-        "latitutde": "39.75",
-        "longitude": "-104.90",
-        "timezone": "America/Denver",
-        "country": "us",
+        "latitude": "50.838557",
+        "longitude": "-0.767475",
+        "timezone": "Europe/London",
+        "country": "gb",
         "font": "Roboto",
     }
     if os.environ.get("CONFIG"):
@@ -28,19 +27,9 @@ def index():
     if not api_key:
         return '{"error": "no_api_key"}'
     # Render
-    if config.get("style", "2") == "7":
-        composer = ImageComposer7(**config)
-        output = composer.render()
-    else:
-        composer = ImageComposer2(
-            api_key,
-            lat=config["latitude"],
-            long=config["longitude"],
-            timezone=config["timezone"],
-        )
-        image = composer.render()
-        output = BytesIO()
-        image.save(output, "PNG")
-    # Send to client
+        
+    composer = ImageComposer7(**config)
+    output = composer.render()
+    
     output.seek(0)
     return send_file(output, mimetype="image/png")
