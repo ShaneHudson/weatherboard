@@ -139,16 +139,16 @@ class ImageComposer:
         self.draw_text(
             context,
             position=(570, 30),
-            text=str(round(temp_min)) + "°",
-            color=BLUE,
+            text=str(round(temp_max))  + "°",
+            color=RED,
             size=20,
             align="center",
         )
         self.draw_text(
             context,
             position=(570, 60),
-            text=str(round(temp_max))  + "°",
-            color=RED,
+            text=str(round(temp_min)) + "°",
+            color=BLUE,
             size=20,
             align="center",
         )
