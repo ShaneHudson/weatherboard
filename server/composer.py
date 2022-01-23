@@ -33,7 +33,7 @@ fonts = {}
 icons = {}
 
 
-class ImageComposer7:
+class ImageComposer:
     def __init__(self, **params):
         self.api_key = params["api_key"]
         self.lat = params["latitude"]
@@ -58,10 +58,7 @@ class ImageComposer7:
             context.fill()
             # Draw features
             self.draw_date(context)
-            if self.top_right == "transport":
-                self.draw_transport(context)
-            else:
-                self.draw_temps(context)
+            self.draw_temps(context)
             self.draw_column(context, self.weather.hourly_summary(0), 120, 30)
             self.draw_column(context, self.weather.hourly_summary(2 * 3600), 120, 155)
             self.draw_column(context, self.weather.hourly_summary(5 * 3600), 120, 280)
@@ -127,116 +124,32 @@ class ImageComposer7:
             weight="bold",
         )
 
-    def draw_transport(self, context: cairo.Context):
-        self.draw_icon(context, "bus", (388, 7))
-        self.draw_icon(context, "train", (513, 7))
-        #self.draw_text(context, position=(415,85), text="minutes", color=BLACK, size=12, align="center")
-        #self.draw_text(context, position=(515,85), text="minutes", color=BLACK, size=12, align="center")
-
-        # Scheduled
-        bus = requests.get(f'https://bustimes.org/stops/{self.wm["stop_id"]}/times.json').json()
-        nxt = bus['times'][:3]
-        nxt = [{"ExpectedArrival":"", "ScheduledArrival": f["aimed_departure_time"]} for f in nxt]
-
-        # Live
-        bus = requests.get(f'http://api.tfwm.org.uk/StopPoint/{self.wm["stop_id"]}/Arrivals?app_id={self.wm["app_id"]}&app_key={self.wm["app_key"]}&formatter=JSON').json()
-        bus = [f for f in bus['Predictions']['Prediction'] if f['ExpectedArrival']]
-
-        # No way of joining these two together apart from assuming same minute... :-/
-        scheduled_live = [re.sub('..Z', '00Z', row['ScheduledArrival']) for row in bus]
-        nxt = [n for n in nxt if n['ScheduledArrival'] not in scheduled_live]
-
-        nxt += bus
-        nxt = sorted(nxt, key=lambda x: x['ExpectedArrival'] or x['ScheduledArrival'])[:3]
-
-        places = [
-            {"position":(400,70), "size":36, "weight":"bold"},
-            {"position":(375,94), "size":16},
-            {"position":(425,94), "size":16},
-        ]
-        for i, row in enumerate(nxt):
-            if row['ExpectedArrival']:
-                exp = datetime.datetime.strptime(row['ExpectedArrival'], '%Y-%m-%dT%H:%M:%SZ')
-                bus_col = BLACK
-            else:
-                exp = datetime.datetime.strptime(row['ScheduledArrival'], '%Y-%m-%dT%H:%M:%SZ')
-                bus_col = GREY
-            exp = f"{exp.strftime('%H:%M')}"
-            self.draw_text(context, text=exp, color=bus_col, align="center", **places[i])
-
-        train = requests.get('https://traintimes.org.uk/live/brv/bhm').text
-        m = re.findall("<tr[^>]*><td[^>]*>(\d\d:\d\d)<br>(?:<span class='faded'|<span class='important'>(\d\d:\d\d))", train)[:3]
-        places = [
-            {"position":(525,70), "size":36, "weight": "bold"},
-            {"position":(500,94), "size":16},
-            {"position":(550,94), "size":16},
-        ]
-        for i, row in enumerate(m):
-            exp = row[1] or row[0]
-            color=RED if row[1] else BLACK
-            self.draw_text(context, text=exp, color=color, align="center", **places[i])
-
-
     def draw_temps(self, context: cairo.Context):
         # Draw on temperature ranges
         temp_min, temp_max = self.weather.temp_range_24hr()
-        c_to_f = lambda c: (c * (9 / 5)) + 32
-        # Draw background rects
-        self.draw_roundrect(context, 335, 5, 85, 90, 5)
-        context.set_source_rgb(*BLUE)
-        context.fill()
-        self.draw_roundrect(context, 510, 5, 85, 90, 5)
-        context.set_source_rgb(*RED)
-        context.fill()
         self.draw_text(
             context,
-            position=(377, 55),
-            text=round(temp_min),
-            color=WHITE,
-            weight="bold",
-            size=50,
-            align="center",
-        )
-        self.draw_text(
-            context,
-            position=(377, 82),
-            text=round(c_to_f(temp_min)),
-            color=WHITE,
-            size=23,
-            align="center",
-        )
-        self.draw_text(
-            context,
-            position=(465, 55),
-            text=round(self.weather.temp_current()),
+            position=(525, 60),
+            text=str(round(self.weather.temp_current())) + "°",
             color=BLACK,
             weight="bold",
-            size=50,
+            size=55,
             align="center",
         )
         self.draw_text(
             context,
-            position=(465, 82),
-            text=round(c_to_f(self.weather.temp_current())),
-            color=BLACK,
-            size=23,
+            position=(570, 30),
+            text=str(round(temp_min)) + "°",
+            color=BLUE,
+            size=20,
             align="center",
         )
         self.draw_text(
             context,
-            position=(553, 55),
-            text=round(temp_max),
-            color=WHITE,
-            weight="bold",
-            size=50,
-            align="center",
-        )
-        self.draw_text(
-            context,
-            position=(553, 82),
-            text=round(c_to_f(temp_max)),
-            color=WHITE,
-            size=23,
+            position=(570, 60),
+            text=str(round(temp_max))  + "°",
+            color=RED,
+            size=20,
             align="center",
         )
 
@@ -474,9 +387,8 @@ class ImageComposer7:
 
     def draw_stats(self, context: cairo.Context):
         # Draw sunrise, sunset, AQI icon and values
-        self.draw_icon(context, "rise-set-aqi", (450, 300))
+        self.draw_icon(context, "rise-set", (450, 300))
         self.draw_suns(context, draw_icon=False)
-        self.draw_aqi(context)
 
     def draw_suns(self, context: cairo.Context, draw_icon=True):
         # Draw sunrise, sunset
@@ -495,23 +407,6 @@ class ImageComposer7:
             text=self.weather.sunset().astimezone(self.timezone).strftime("%H:%M"),
             color=BLACK,
             size=32,
-        )
-
-    def draw_aqi(self, context: cairo.Context):
-        # Pick AQI text and color
-        aqi = self.weather.aqi()
-        if aqi < 50:
-            color = GREEN
-        elif aqi < 150:
-            color = ORANGE
-        else:
-            color = RED
-        text_width = self.draw_text(context, aqi, size=30, weight="bold", noop=True)
-        self.draw_roundrect(context, 505, 402, text_width + 13, 36, 3)
-        context.set_source_rgb(*color)
-        context.fill()
-        self.draw_text(
-            context, position=(510, 430), text=aqi, color=WHITE, size=30, weight="bold"
         )
 
     def draw_roundrect(self, context, x, y, width, height, r):
@@ -596,7 +491,7 @@ class ImageComposer7:
 
     def draw_icon(self, context: cairo.Context, icon: str, position: Tuple[int, int]):
         image = cairo.ImageSurface.create_from_png(
-            os.path.join(os.path.dirname(__file__), "icons-7", f"{icon}.png")
+            os.path.join(os.path.dirname(__file__), "icons", f"{icon}.png")
         )
         context.save()
         context.translate(*position)

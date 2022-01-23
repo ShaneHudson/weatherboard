@@ -3,7 +3,7 @@ from io import BytesIO
 
 from flask import Flask, send_file, request
 
-from composer_7 import ImageComposer7
+from composer import ImageComposer
 
 app = Flask(__name__)
 
@@ -28,7 +28,7 @@ def index():
         return '{"error": "no_api_key"}'
     # Render
         
-    composer = ImageComposer7(**config)
+    composer = ImageComposer(**config)
     output = composer.render()
     
     output.seek(0)

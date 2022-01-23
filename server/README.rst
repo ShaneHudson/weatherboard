@@ -10,3 +10,6 @@ To setup::
 To develop::
 
     FLASK_APP=server:app flask run --reload
+
+
+Mount this folder as volume in docker
