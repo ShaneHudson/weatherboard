@@ -8,3 +8,8 @@ sudo service weatherboard restart
 
 Crontab:
 0 * * * * curl localhost/?api_key=[API KEY] -o /home/pi/weatherboard/screenshot.jpg | python /home/pi/weatherboard/displayImage.py /home/pi/weatherboard/screenshot.jpg
+
+
+
+Local dev:
+docker run -d --name weatherboard -v $(pwd):/srv/weatherboard -p 80:80 weatherboard
