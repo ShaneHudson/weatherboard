@@ -1,28 +1,17 @@
-FROM python:3.9-alpine
-
-# Copy and install requirements
-RUN apk update && apk add \
-    gcc \
-    g++ \
-    freetype-dev \
-    musl-dev \
-    jpeg-dev \
-    zlib-dev \
-    libjpeg \
-    python3-dev \
-    cairo-dev
+FROM python:3.7-buster
+RUN apt-get install libcairo2-dev
 
 # Codebase setup
 RUN mkdir /srv/weatherboard/
 WORKDIR /srv/weatherboard/
-RUN pip3 install requests pillow flask gunicorn pytz pycairo
+RUN pip3 install requests pillow flask gunicorn pytz pycairo matplotlib --no-cache-dir
 
 # Add code
 ENV PYTHONPATH /srv/weatherboard/server/
 ADD . /srv/weatherboard/
 
 # Add fonts
-RUN mkdir /usr/share/fonts && cp /srv/weatherboard/fonts/Roboto* /usr/share/fonts && fc-cache
+RUN cp /srv/weatherboard/fonts/* /usr/share/fonts && fc-cache
 
 # Runtime
 ENV PORT 80

@@ -15,7 +15,7 @@ def index():
         "longitude": "-0.767475",
         "timezone": "Europe/London",
         "country": "gb",
-        "font": "Roboto",
+        "font": "Roboto"
     }
     if os.environ.get("CONFIG"):
         import json

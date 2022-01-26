@@ -9,6 +9,8 @@ import pytz
 import cairo
 import requests
 
+from puzzles.maze_runner import MazeRunner
+
 from weather import WeatherClient
 from holidays import holidays_by_country
 
@@ -50,6 +52,10 @@ class ImageComposer:
         # Fetch weather
         self.weather = WeatherClient(self.lat, self.long, self.timezone)
         self.weather.load(self.api_key)
+
+        # Generate puzzle
+        self.puzzle = MazeRunner(8, 8)
+
         # Create image
         with cairo.ImageSurface(cairo.FORMAT_ARGB32, 600, 448) as surface:
             context = cairo.Context(surface)
@@ -70,6 +76,8 @@ class ImageComposer:
                 self.draw_moonphase(context)
             else:
                 self.draw_stats(context)
+            self.draw_image(context, "", "puzzle.png", (350, 10))
+
             # Save out as bytestream
             output = BytesIO()
             surface.write_to_png(output)
@@ -138,7 +146,7 @@ class ImageComposer:
         )
         self.draw_text(
             context,
-            position=(570, 30),
+            position=(570, 34),
             text=str(round(temp_max))  + "°",
             color=RED,
             size=20,
@@ -146,7 +154,7 @@ class ImageComposer:
         )
         self.draw_text(
             context,
-            position=(570, 60),
+            position=(570, 58),
             text=str(round(temp_min)) + "°",
             color=BLUE,
             size=20,
@@ -490,8 +498,12 @@ class ImageComposer:
         context.fill()
 
     def draw_icon(self, context: cairo.Context, icon: str, position: Tuple[int, int]):
+        self.draw_image(context, "icons", f"{icon}.png", position)
+
+
+    def draw_image(self, context: cairo.Context, folder: str, filename: str, position: Tuple[int, int]):
         image = cairo.ImageSurface.create_from_png(
-            os.path.join(os.path.dirname(__file__), "icons", f"{icon}.png")
+            os.path.join(os.path.dirname(__file__), folder, filename)
         )
         context.save()
         context.translate(*position)
